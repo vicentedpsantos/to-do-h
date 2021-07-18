@@ -8,6 +8,39 @@ type ItemDescription = Maybe String
 defaultDataPath :: FilePath
 defaultDataPath = "~/.to-do.yaml"
 
+inforParser :: Parser Command
+inforParser = pure Info
+
+initParser :: Parser Command
+initParser = pure List
+
+listParser :: Parser Command
+listParser = pure List
+
+addParser :: Parser Command
+addParser = pure Add
+
+viewParser :: Parser Command
+viewParser = pure View
+
+updateParser :: Parser Command
+updateParser = pure Update
+
+removeParser :: Parser Command
+removeParser = pure Remove
+
+commandParser :: Parser Command
+commandParser = subparser $ mconcat
+  [ command "info"   (info inforParser  (progDesc "Show info"))
+  , command "init"   (info initParser   (progDesc "Initialize items"))
+  , command "list"   (info listParser   (progDesc "List items"))
+  , command "add"    (info addParser    (progDesc "Add item"))
+  , command "view"   (info viewParser   (progDesc "View item"))
+  , command "update" (info updateParser (progDesc "Update item"))
+  , command "remove" (info removeParser   (progDesc "Remove item"))
+  ]
+
+
 dataPathParser :: Parser FilePath
 dataPathParser = strOption $
   value defaultDataPath
@@ -20,6 +53,15 @@ itemIndexParser :: Parser ItemIndex
 itemIndexParser = argument auto (metavar "ITEMINDEX" <> help "index of item")
 
 data Options = Options FilePath ItemIndex ItemDescription deriving Show
+
+data Command =
+  Info
+    | Init
+    | List
+    | Add
+    | View
+    | Update
+    | Remove
 
 itemDescriptionValueParser :: Parser String
 itemDescriptionValueParser =
