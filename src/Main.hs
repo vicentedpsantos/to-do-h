@@ -8,6 +8,13 @@ type ItemDescription = Maybe String
 type ItemPriority = Maybe String
 type ItemDueBy = Maybe String
 
+data Item = Item
+  { title       :: ItemTitle
+  , description :: ItemDescription
+  , priority    :: ItemPriority
+  , dueBy       :: ItemDueBy
+  } deriving Show
+
 data ItemUpdate = ItemUpdate
   { titleUpdate       :: Maybe ItemTitle
   , descriptionUpdate :: Maybe ItemDescription
@@ -28,10 +35,21 @@ listParser :: Parser Command
 listParser = pure List
 
 addParser :: Parser Command
-addParser = pure Add
+addParser = Add <$> addItemParser
+
+addItemParser :: Parser Item
+addItemParser = Item
+  <$> argument str (metavar "TITLE" <> help "title")
+  <*> optional itemDescriptionValueParser
+  <*> optional itemPriorityValueParser
+  <*> optional itemDueByValueParser
 
 viewParser :: Parser Command
-viewParser = pure View
+viewParser = View <$> itemIndexParser
+
+viewItemParser = Item
+  <$> argument str (metavar "TITLE" <> help "title")
+
 
 updateParser :: Parser Command
 updateParser = Update <$> itemIndexParser <*> updateItemParser
@@ -62,7 +80,7 @@ updateItemDueByParser =
   <|> flag' Nothing (long "clear-due-by") -- "--clear-desc"
 
 removeParser :: Parser Command
-removeParser = pure Remove
+removeParser = Remove <$> itemIndexParser
 
 commandParser :: Parser Command
 commandParser = subparser $ mconcat
@@ -92,10 +110,10 @@ data Command =
   Info
     | Init
     | List
-    | Add
-    | View
+    | Add Item
+    | View ItemIndex
     | Update ItemIndex ItemUpdate
-    | Remove
+    | Remove ItemIndex
     deriving Show
 
 itemTitleValueParser :: Parser String
@@ -148,7 +166,7 @@ run :: FilePath -> Command -> IO ()
 run dataPath Info   = putStrLn "info"
 run dataPath Init   = putStrLn "init"
 run dataPath List   = putStrLn "list"
-run dataPath Add    = putStrLn "add"
-run dataPath View   = putStrLn "view"
+run dataPath (Add item)    = putStrLn $ "add: item=" ++ show item
+run dataPath (View idx)   = putStrLn $ "view: idx=" ++ show idx
 run dataPath (Update idx itemUpdate) = putStrLn $ "update: idx=" ++ show idx ++ " itemUpdate=" ++ show itemUpdate
-run dataPath Remove = putStrLn "remove"
+run dataPath (Remove idx) = putStrLn $ "remove: idx=" ++ show idx
