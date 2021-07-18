@@ -40,7 +40,6 @@ commandParser = subparser $ mconcat
   , command "remove" (info removeParser   (progDesc "Remove item"))
   ]
 
-
 dataPathParser :: Parser FilePath
 dataPathParser = strOption $
   value defaultDataPath
@@ -52,7 +51,7 @@ dataPathParser = strOption $
 itemIndexParser :: Parser ItemIndex
 itemIndexParser = argument auto (metavar "ITEMINDEX" <> help "index of item")
 
-data Options = Options FilePath ItemIndex ItemDescription deriving Show
+data Options = Options FilePath Command deriving Show
 
 data Command =
   Info
@@ -62,6 +61,7 @@ data Command =
     | View
     | Update
     | Remove
+    deriving Show
 
 itemDescriptionValueParser :: Parser String
 itemDescriptionValueParser =
@@ -80,10 +80,18 @@ updateItemDescriptionParser =
 optionsParser :: Parser Options
 optionsParser = Options
                 <$> dataPathParser
-                <*> itemIndexParser
-                <*> updateItemDescriptionParser
+                <*> commandParser
 
 main :: IO ()
 main = do
-  options <- execParser(info optionsParser (progDesc "To-do manager"))
-  putStrLn $ "options=" ++ show options
+  Options dataPath command <- execParser(info optionsParser (progDesc "To-do manager"))
+  run dataPath command
+
+run :: FilePath -> Command -> IO ()
+run dataPath Info   = putStrLn "info"
+run dataPath Init   = putStrLn "init"
+run dataPath List   = putStrLn "list"
+run dataPath Add    = putStrLn "add"
+run dataPath View   = putStrLn "view"
+run dataPath Update = putStrLn "update"
+run dataPath Remove = putStrLn "remove"
