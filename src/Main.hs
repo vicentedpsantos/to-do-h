@@ -18,9 +18,14 @@ dataPathParser = strOption $
 itemIndexParser :: Parser ItemIndex
 itemIndexParser = argument auto (metavar "ITEMINDEX" <> help "index of item")
 
+data Options = Options FilePath ItemIndex deriving Show
+
+optionsParser :: Parser Options
+optionsParser = Options
+                <$> dataPathParser
+                <*> itemIndexParser
+
 main :: IO ()
 main = do
-  dataPath <- execParser (info dataPathParser (progDesc "To-do manager"))
-  putStrLn $ "dataPath=" ++ show dataPath
-  -- itemIndex <- execParser (info itemIndexParser (progDesc "To-do manager"))
-  -- putStrLn $ "itemIndex" ++ show itemIndex
+  options <- execParser(info optionsParser (progDesc "To-do manager"))
+  putStrLn $ "options=" ++ show options
