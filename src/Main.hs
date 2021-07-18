@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Options.Applicative
+import Options.Applicative hiding (infoParser)
 
 type ItemIndex = Int
 type ItemDescription = Maybe String
@@ -8,8 +8,8 @@ type ItemDescription = Maybe String
 defaultDataPath :: FilePath
 defaultDataPath = "~/.to-do.yaml"
 
-inforParser :: Parser Command
-inforParser = pure Info
+infoParser :: Parser Command
+infoParser = pure Info
 
 initParser :: Parser Command
 initParser = pure List
@@ -31,7 +31,7 @@ removeParser = pure Remove
 
 commandParser :: Parser Command
 commandParser = subparser $ mconcat
-  [ command "info"   (info inforParser  (progDesc "Show info"))
+  [ command "info"   (info infoParser   (progDesc "Show info"))
   , command "init"   (info initParser   (progDesc "Initialize items"))
   , command "list"   (info listParser   (progDesc "List items"))
   , command "add"    (info addParser    (progDesc "Add item"))
