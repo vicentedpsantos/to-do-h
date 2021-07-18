@@ -3,6 +3,7 @@ module Main (main) where
 import Options.Applicative
 
 type ItemIndex = Int
+type ItemDescription = Maybe String
 
 defaultDataPath :: FilePath
 defaultDataPath = "~/.to-do.yaml"
@@ -18,12 +19,27 @@ dataPathParser = strOption $
 itemIndexParser :: Parser ItemIndex
 itemIndexParser = argument auto (metavar "ITEMINDEX" <> help "index of item")
 
-data Options = Options FilePath ItemIndex deriving Show
+data Options = Options FilePath ItemIndex ItemDescription deriving Show
+
+itemDescriptionValueParser :: Parser String
+itemDescriptionValueParser =
+  strOption (
+    long "desc"
+    <> short 'd'
+    <> metavar "DESCRIPTION"
+    <> help "description"
+  )
+
+updateItemDescriptionParser :: Parser ItemDescription
+updateItemDescriptionParser = 
+  Just <$> itemDescriptionValueParser
+  <|> flag' Nothing (long "clear-desc") -- "--clear-desc"
 
 optionsParser :: Parser Options
 optionsParser = Options
                 <$> dataPathParser
                 <*> itemIndexParser
+                <*> updateItemDescriptionParser
 
 main :: IO ()
 main = do
