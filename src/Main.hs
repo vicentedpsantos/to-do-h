@@ -2,11 +2,23 @@ module Main (main) where
 
 import Options.Applicative hiding (infoParser)
 
-type ItemIndex = Int
-type ItemTitle = String
+type ItemIndex       = Int
+type ItemTitle       = String
 type ItemDescription = Maybe String
-type ItemPriority = Maybe String
-type ItemDueBy = Maybe String
+type ItemPriority    = Maybe String
+type ItemDueBy       = Maybe String
+
+data Options = Options FilePath Command deriving Show
+
+data Command =
+  Info
+    | Init
+    | List
+    | Add Item
+    | View ItemIndex
+    | Update ItemIndex ItemUpdate
+    | Remove ItemIndex
+    deriving Show
 
 data Item = Item
   { title       :: ItemTitle
@@ -50,7 +62,6 @@ viewParser = View <$> itemIndexParser
 viewItemParser = Item
   <$> argument str (metavar "TITLE" <> help "title")
 
-
 updateParser :: Parser Command
 updateParser = Update <$> itemIndexParser <*> updateItemParser
 
@@ -90,7 +101,7 @@ commandParser = subparser $ mconcat
   , command "add"    (info addParser    (progDesc "Add item"))
   , command "view"   (info viewParser   (progDesc "View item"))
   , command "update" (info updateParser (progDesc "Update item"))
-  , command "remove" (info removeParser   (progDesc "Remove item"))
+  , command "remove" (info removeParser (progDesc "Remove item"))
   ]
 
 dataPathParser :: Parser FilePath
@@ -103,18 +114,6 @@ dataPathParser = strOption $
 
 itemIndexParser :: Parser ItemIndex
 itemIndexParser = argument auto (metavar "ITEMINDEX" <> help "index of item")
-
-data Options = Options FilePath Command deriving Show
-
-data Command =
-  Info
-    | Init
-    | List
-    | Add Item
-    | View ItemIndex
-    | Update ItemIndex ItemUpdate
-    | Remove ItemIndex
-    deriving Show
 
 itemTitleValueParser :: Parser String
 itemTitleValueParser =
@@ -163,10 +162,10 @@ main = do
   run dataPath command
 
 run :: FilePath -> Command -> IO ()
-run dataPath Info   = putStrLn "info"
-run dataPath Init   = putStrLn "init"
-run dataPath List   = putStrLn "list"
-run dataPath (Add item)    = putStrLn $ "add: item=" ++ show item
+run dataPath Info         = putStrLn "info"
+run dataPath Init         = putStrLn "init"
+run dataPath List         = putStrLn "list"
+run dataPath (Add item)   = putStrLn $ "add: item=" ++ show item
 run dataPath (View idx)   = putStrLn $ "view: idx=" ++ show idx
 run dataPath (Update idx itemUpdate) = putStrLn $ "update: idx=" ++ show idx ++ " itemUpdate=" ++ show itemUpdate
 run dataPath (Remove idx) = putStrLn $ "remove: idx=" ++ show idx
