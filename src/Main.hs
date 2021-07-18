@@ -3,7 +3,17 @@ module Main (main) where
 import Options.Applicative hiding (infoParser)
 
 type ItemIndex = Int
+type ItemTitle = String
 type ItemDescription = Maybe String
+type ItemPriority = Maybe String
+type ItemDueBy = Maybe String
+
+data ItemUpdate = ItemUpdate
+  { titleUpdate       :: Maybe ItemTitle
+  , descriptionUpdate :: Maybe ItemDescription
+  , priorityUpdate    :: Maybe ItemPriority
+  , dueByUpdate       :: Maybe ItemDueBy
+  } deriving Show
 
 defaultDataPath :: FilePath
 defaultDataPath = "~/.to-do.yaml"
@@ -24,7 +34,32 @@ viewParser :: Parser Command
 viewParser = pure View
 
 updateParser :: Parser Command
-updateParser = pure Update
+updateParser = Update <$> itemIndexParser <*> updateItemParser
+
+updateItemParser :: Parser ItemUpdate
+updateItemParser = ItemUpdate
+  <$> optional updateItemTitleParser
+  <*> optional updateItemDescriptionParser
+  <*> optional updateItemPriorityParser
+  <*> optional updateItemDueByParser
+
+updateItemTitleParser :: Parser ItemTitle
+updateItemTitleParser = itemTitleValueParser
+
+updateItemDescriptionParser :: Parser ItemDescription
+updateItemDescriptionParser = 
+  Just <$> itemDescriptionValueParser
+  <|> flag' Nothing (long "clear-desc") -- "--clear-desc"
+
+updateItemPriorityParser :: Parser ItemPriority
+updateItemPriorityParser = 
+  Just <$> itemPriorityValueParser
+  <|> flag' Nothing (long "clear-priority") -- "--clear-priority"
+
+updateItemDueByParser :: Parser ItemDueBy
+updateItemDueByParser = 
+  Just <$> itemDueByValueParser
+  <|> flag' Nothing (long "clear-due-by") -- "--clear-desc"
 
 removeParser :: Parser Command
 removeParser = pure Remove
@@ -59,9 +94,18 @@ data Command =
     | List
     | Add
     | View
-    | Update
+    | Update ItemIndex ItemUpdate
     | Remove
     deriving Show
+
+itemTitleValueParser :: Parser String
+itemTitleValueParser =
+  strOption(
+    long "title"
+    <> short 't'
+    <> metavar "TITLE"
+    <> help "title"
+  )
 
 itemDescriptionValueParser :: Parser String
 itemDescriptionValueParser =
@@ -72,10 +116,23 @@ itemDescriptionValueParser =
     <> help "description"
   )
 
-updateItemDescriptionParser :: Parser ItemDescription
-updateItemDescriptionParser = 
-  Just <$> itemDescriptionValueParser
-  <|> flag' Nothing (long "clear-desc") -- "--clear-desc"
+itemPriorityValueParser :: Parser String
+itemPriorityValueParser =
+  strOption(
+    long "priority"
+    <> short 'p'
+    <> metavar "PRIORITY"
+    <> help "priority"
+  )
+
+itemDueByValueParser :: Parser String
+itemDueByValueParser =
+  strOption(
+    long "due-by"
+    <>  short 'b'
+    <> metavar "DUEBY"
+    <> help "due-by date/time"
+  )
 
 optionsParser :: Parser Options
 optionsParser = Options
@@ -93,5 +150,5 @@ run dataPath Init   = putStrLn "init"
 run dataPath List   = putStrLn "list"
 run dataPath Add    = putStrLn "add"
 run dataPath View   = putStrLn "view"
-run dataPath Update = putStrLn "update"
+run dataPath (Update idx itemUpdate) = putStrLn $ "update: idx=" ++ show idx ++ " itemUpdate=" ++ show itemUpdate
 run dataPath Remove = putStrLn "remove"
