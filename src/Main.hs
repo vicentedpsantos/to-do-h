@@ -3,12 +3,15 @@
 
 module Main (main) where
 
+import           Control.Exception
 import           Data.Aeson hiding (Options)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
+import           Data.Functor
 import qualified Data.Yaml as Yaml
 import           GHC.Generics
 import           Options.Applicative hiding (infoParser)
+import           System.IO.Error
 
 type ItemIndex       = Int
 type ItemTitle       = String
@@ -171,10 +174,9 @@ optionsParser = Options
                 <*> commandParser
 
 main :: IO ()
-main  = BS.putStrLn $ Yaml.encode $ ToDoList
-  [ Item "title1" (Just "description1") (Just "priority1") (Just "dueBy1")
-  , Item "title2" (Just "description2") (Just "priority2") (Just "dueBy2")
-  ]
+main  = do
+  toDoList <- readToDoList "file.txt"
+  print toDoList
 
 run :: FilePath -> Command -> IO ()
 run dataPath Info         = putStrLn "info"
@@ -184,3 +186,12 @@ run dataPath (Add item)   = putStrLn $ "add: item=" ++ show item
 run dataPath (View idx)   = putStrLn $ "view: idx=" ++ show idx
 run dataPath (Update idx itemUpdate) = putStrLn $ "update: idx=" ++ show idx ++ " itemUpdate=" ++ show itemUpdate
 run dataPath (Remove idx) = putStrLn $ "remove: idx=" ++ show idx
+
+writeToDoList :: FilePath -> ToDoList -> IO ()
+writeToDoList dataPath toDoList = BS.writeFile dataPath (Yaml.encode toDoList)
+
+readToDoList :: FilePath -> IO (Maybe ToDoList)
+readToDoList dataPath = catchJust
+  (\e -> if isDoesNotExistError e then Just () else Nothing)
+  (BS.readFile dataPath <&> Yaml.decode)
+  (\_ -> return $ Just (ToDoList []))
