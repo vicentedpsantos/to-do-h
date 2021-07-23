@@ -1,12 +1,23 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main (main) where
 
-import Options.Applicative hiding (infoParser)
+import           Data.Aeson hiding (Options)
+import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as BSL
+import qualified Data.Yaml as Yaml
+import           GHC.Generics
+import           Options.Applicative hiding (infoParser)
 
 type ItemIndex       = Int
 type ItemTitle       = String
 type ItemDescription = Maybe String
 type ItemPriority    = Maybe String
 type ItemDueBy       = Maybe String
+
+data ToDoList = ToDoList [Item] deriving (Generic, Show)
+instance ToJSON ToDoList
 
 data Options = Options FilePath Command deriving Show
 
@@ -25,7 +36,8 @@ data Item = Item
   , description :: ItemDescription
   , priority    :: ItemPriority
   , dueBy       :: ItemDueBy
-  } deriving Show
+  } deriving (Generic, Show)
+instance ToJSON Item
 
 data ItemUpdate = ItemUpdate
   { titleUpdate       :: Maybe ItemTitle
@@ -157,9 +169,10 @@ optionsParser = Options
                 <*> commandParser
 
 main :: IO ()
-main = do
-  Options dataPath command <- execParser(info optionsParser (progDesc "To-do manager"))
-  run dataPath command
+main  = BSL.putStrLn $ encode $ ToDoList
+  [ Item "title1" (Just "description1") (Just "priority1") (Just "dueBy1")
+  , Item "title2" (Just "description2") (Just "priority2") (Just "dueBy2")
+  ]
 
 run :: FilePath -> Command -> IO ()
 run dataPath Info         = putStrLn "info"
