@@ -171,7 +171,7 @@ optionsParser = Options
                 <*> commandParser
 
 main :: IO ()
-main  = BSL.putStrLn $ encode $ ToDoList
+main  = BS.putStrLn $ Yaml.encode $ ToDoList
   [ Item "title1" (Just "description1") (Just "priority1") (Just "dueBy1")
   , Item "title2" (Just "description2") (Just "priority2") (Just "dueBy2")
   ]
