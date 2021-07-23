@@ -190,8 +190,12 @@ run dataPath (Remove idx) = putStrLn $ "remove: idx=" ++ show idx
 writeToDoList :: FilePath -> ToDoList -> IO ()
 writeToDoList dataPath toDoList = BS.writeFile dataPath (Yaml.encode toDoList)
 
-readToDoList :: FilePath -> IO (Maybe ToDoList)
-readToDoList dataPath = catchJust
-  (\e -> if isDoesNotExistError e then Just () else Nothing)
-  (BS.readFile dataPath <&> Yaml.decode)
-  (\_ -> return $ Just (ToDoList []))
+readToDoList :: FilePath -> IO ToDoList
+readToDoList dataPath = do
+  mbToDoList <- catchJust
+    (\e -> if isDoesNotExistError e then Just () else Nothing)
+    (BS.readFile dataPath <&> Yaml.decode)
+    (\_ -> return $ Just (ToDoList []))
+  case mbToDoList of
+    Nothing -> error "YAML file is corrupt"
+    Just toDoList -> return toDoList
