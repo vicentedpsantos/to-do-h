@@ -8,9 +8,11 @@ import           Data.Aeson hiding (Options)
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import           Data.Functor
+import           Data.String.Utils
 import qualified Data.Yaml as Yaml
 import           GHC.Generics
 import           Options.Applicative hiding (infoParser)
+import           System.Directory
 import           System.IO.Error
 
 type ItemIndex       = Int
@@ -174,8 +176,16 @@ optionsParser = Options
                 <*> commandParser
 
 main :: IO ()
-main  = do
-  toDoList <- readToDoList "file.txt"
+main = do
+  Options dataPath command <- execParser(info (optionsParser) (progDesc "To Do List"))
+  homeDir <- getHomeDirectory
+  let expandedDataPath = replace "~" homeDir dataPath
+
+  writeToDoList expandedDataPath $ ToDoList
+    [ Item "title1" (Just "description1") (Just "priority1") (Just "dueby1")
+    , Item "title2" (Just "description2") (Just "priority2") (Just "dueby2")
+    ]
+  toDoList <- readToDoList expandedDataPath
   print toDoList
 
 run :: FilePath -> Command -> IO ()
