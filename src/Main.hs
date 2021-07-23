@@ -16,8 +16,9 @@ type ItemDescription = Maybe String
 type ItemPriority    = Maybe String
 type ItemDueBy       = Maybe String
 
-data ToDoList = ToDoList [Item] deriving (Generic, Show)
+newtype ToDoList = ToDoList [Item] deriving (Generic, Show)
 instance ToJSON ToDoList
+instance FromJSON ToDoList
 
 data Options = Options FilePath Command deriving Show
 
@@ -38,6 +39,7 @@ data Item = Item
   , dueBy       :: ItemDueBy
   } deriving (Generic, Show)
 instance ToJSON Item
+instance FromJSON Item
 
 data ItemUpdate = ItemUpdate
   { titleUpdate       :: Maybe ItemTitle
