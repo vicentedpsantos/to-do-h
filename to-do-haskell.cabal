@@ -25,4 +25,5 @@ executable to-do-haskell
                      , optparse-applicative
                      , strict
                      , text
+                     , time
                      , yaml
