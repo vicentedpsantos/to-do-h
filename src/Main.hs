@@ -9,6 +9,7 @@ import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import           Data.Functor
 import           Data.String.Utils
+import           Data.Time
 import qualified Data.Yaml as Yaml
 import           GHC.Generics
 import           Options.Applicative hiding (infoParser)
@@ -19,7 +20,7 @@ type ItemIndex       = Int
 type ItemTitle       = String
 type ItemDescription = Maybe String
 type ItemPriority    = Maybe String
-type ItemDueBy       = Maybe String
+type ItemDueBy       = Maybe LocalTime
 
 newtype ToDoList = ToDoList [Item] deriving (Generic, Show)
 instance ToJSON ToDoList
@@ -161,14 +162,22 @@ itemPriorityValueParser =
     <> help "priority"
   )
 
-itemDueByValueParser :: Parser String
+itemDueByValueParser :: Parser LocalTime
 itemDueByValueParser =
-  strOption(
+  option readDateTime(
     long "due-by"
     <>  short 'b'
     <> metavar "DUEBY"
     <> help "due-by date/time"
   )
+    where
+      readDateTime = eitherReader $ \arg ->
+        case parseDateTimeMaybe arg of
+          (Just dateTime) -> Right dateTime
+          Nothing -> Left $ "Date/time string must be in " ++ dateTimeFormat ++ " format"
+      parseDateTimeMaybe = parseTimeM False defaultTimeLocale dateTimeFormat
+      dateTimeFormat = "%Y/%m/%d %H:%M:%S"
+
 
 optionsParser :: Parser Options
 optionsParser = Options
@@ -177,13 +186,14 @@ optionsParser = Options
 
 main :: IO ()
 main = do
-  Options dataPath command <- execParser(info (optionsParser) (progDesc "To Do List"))
+  Options dataPath command <- execParser(info optionsParser (progDesc "To Do List"))
   homeDir <- getHomeDirectory
   let expandedDataPath = replace "~" homeDir dataPath
 
+  let dueBy = LocalTime (ModifiedJulianDay 0) (TimeOfDay 0 0 0)
   writeToDoList expandedDataPath $ ToDoList
-    [ Item "title1" (Just "description1") (Just "priority1") (Just "dueby1")
-    , Item "title2" (Just "description2") (Just "priority2") (Just "dueby2")
+    [ Item "title1" (Just "description1") (Just "priority1") (Just dueBy)
+    , Item "title2" (Just "description2") (Just "priority2") (Just dueBy)
     ]
   toDoList <- readToDoList expandedDataPath
   print toDoList
