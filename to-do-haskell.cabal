@@ -22,6 +22,7 @@ executable to-do-haskell
                      , base >= 4.7 && < 5
                      , bytestring
                      , directory
+                     , listsafe
                      , optparse-applicative
                      , strict
                      , text
