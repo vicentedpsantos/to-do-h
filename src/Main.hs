@@ -208,7 +208,7 @@ run :: FilePath -> Command -> IO ()
 run dataPath Info         = putStrLn "info"
 run dataPath Init         = putStrLn "init"
 run dataPath List         = putStrLn "list"
-run dataPath (Add item)   = putStrLn $ "add: item=" ++ show item
+run dataPath (Add item)   = addItem dataPath item
 run dataPath (View idx)   = viewItem dataPath idx
 run dataPath (Update idx itemUpdate) = putStrLn $ "update: idx=" ++ show idx ++ " itemUpdate=" ++ show itemUpdate
 run dataPath (Remove idx) = putStrLn $ "remove: idx=" ++ show idx
@@ -248,3 +248,9 @@ viewItem dataPath idx = do
     Nothing -> putStrLn "Invalid item index"
     Just item -> showItem idx item
   print items
+
+addItem :: FilePath -> Item -> IO ()
+addItem dataPath item = do
+  ToDoList items <- readToDoList dataPath
+  let newToDoList = ToDoList (item : items)
+  writeToDoList dataPath newToDoList
